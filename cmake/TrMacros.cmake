@@ -101,6 +101,10 @@ macro(tr_add_external_auto_library ID DIRNAME LIBNAME)
                 "-DCMAKE_CXX_FLAGS:STRING=${CMAKE_CXX_FLAGS}"
                 "-DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}"
                 "-DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>"
+                "-DANDROID_STL=${ANDROID_STL}"
+                "-DANDROID_ABI=${ANDROID_ABI}"
+                "-DANDROID_PLATFORM=${ANDROID_PLATFORM}"
+                "-DDCMAKE_CROSSCOMPILING=true"
             BUILD_BYPRODUCTS "${${ID}_LIBRARY}"
         )
 
