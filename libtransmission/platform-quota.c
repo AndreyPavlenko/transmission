@@ -312,6 +312,12 @@ static int64_t getquota(char const* device)
     return freespace < 0 ? 0 : freespace;
 }
 
+#elif defined(__ANDROID__)
+static int64_t getquota(char const* device)
+{
+    return -1;
+}
+
 #else
 
 static int64_t getquota(char const* device)
