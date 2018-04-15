@@ -655,7 +655,15 @@ static bool pieceHasFile(tr_piece_index_t piece, tr_file const* file)
     return file->firstPiece <= piece && piece <= file->lastPiece;
 }
 
-static tr_priority_t calculatePiecePriority(tr_torrent const* tor, tr_piece_index_t piece, tr_file_index_t file_hint)
+static tr_priority_t calculateHighPriorityPieceMargin(tr_torrent const* tor) {
+    if (tor->info.pieceSize == 0) return 1;
+    tr_piece_index_t marginLen = 4 * 1024 * 1024;
+    return (marginLen % tor->info.pieceSize) == 0 ? (marginLen / tor->info.pieceSize) :
+                                                    (marginLen / tor->info.pieceSize) + 1;
+}
+
+static tr_priority_t calculatePiecePriority(tr_torrent const* tor, tr_piece_index_t piece,
+    tr_file_index_t file_hint, tr_piece_index_t margin)
 {
     // safeguard against a bad arg
     tr_info const* const inf = tr_torrentInfo(tor);
@@ -684,9 +692,16 @@ static tr_priority_t calculatePiecePriority(tr_torrent const* tor, tr_piece_inde
         /* When dealing with multimedia files, getting the first and
            last pieces can sometimes allow you to preview it a bit
            before it's fully downloaded... */
-        if ((file->priority >= TR_PRI_NORMAL) && (file->firstPiece == piece || file->lastPiece == piece))
+        if (tor->isSequential || (file->priority >= TR_PRI_NORMAL))
         {
-            priority = TR_PRI_HIGH;
+            if ((piece >= file->firstPiece) && (piece < (file->firstPiece + margin)))
+            {
+                priority = TR_PRI_HIGH;
+            }
+            else if ((piece > (file->lastPiece - margin)) && (piece <= file->lastPiece))
+            {
+                priority = TR_PRI_HIGH;
+            }
         }
     }
 
@@ -697,6 +712,7 @@ static void tr_torrentInitFilePieces(tr_torrent* tor)
 {
     uint64_t offset = 0;
     tr_info* inf = &tor->info;
+    tr_priority_t margin = calculateHighPriorityPieceMargin(tor);
 
     /* assign the file offsets */
     for (tr_file_index_t f = 0; f < inf->fileCount; ++f)
@@ -752,7 +768,7 @@ static void tr_torrentInitFilePieces(tr_torrent* tor)
 
     for (tr_piece_index_t p = 0; p < inf->pieceCount; ++p)
     {
-        inf->pieces[p].priority = calculatePiecePriority(tor, p, firstFiles[p]);
+        inf->pieces[p].priority = calculatePiecePriority(tor, p, firstFiles[p], margin);
     }
 
     tr_free(firstFiles);
@@ -893,6 +909,7 @@ static void torrentInit(tr_torrent* tor, tr_ctor const* ctor)
     uint64_t loaded;
     char const* dir;
     bool isNewTorrent;
+    bool isSequential;
     static int nextUniqueId = 1;
 
     tor->session = session;
@@ -916,6 +933,15 @@ static void torrentInit(tr_torrent* tor, tr_ctor const* ctor)
     if (tr_sessionIsIncompleteDirEnabled(session))
     {
         tor->incompleteDir = tr_strdup(dir);
+    }
+
+    if (tr_ctorGetSequentialDownload (ctor, &isSequential))
+    {
+        tor->isSequential = isSequential;
+    }
+    else
+    {
+        tor->isSequential = session->isSequentialDownload;
     }
 
     tr_bandwidthConstruct(&tor->bandwidth, session, &session->bandwidth);
@@ -2331,12 +2357,12 @@ void tr_torrentInitFilePriority(tr_torrent* tor, tr_file_index_t fileIndex, tr_p
     TR_ASSERT(tr_isPriority(priority));
 
     tr_file* file = &tor->info.files[fileIndex];
-
+    tr_priority_t margin = calculateHighPriorityPieceMargin(tor);
     file->priority = priority;
 
     for (tr_piece_index_t i = file->firstPiece; i <= file->lastPiece; ++i)
     {
-        tor->info.pieces[i].priority = calculatePiecePriority(tor, i, fileIndex);
+        tor->info.pieces[i].priority = calculatePiecePriority(tor, i, fileIndex, margin);
     }
 }
 

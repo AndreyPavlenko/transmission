@@ -179,7 +179,8 @@ enum piece_sort_state
 {
     PIECES_UNSORTED,
     PIECES_SORTED_BY_INDEX,
-    PIECES_SORTED_BY_WEIGHT
+    PIECES_SORTED_BY_WEIGHT,
+    PIECES_SORTED_BY_SEQUENCE
 };
 
 /** @brief Opaque, per-torrent data structure for peer connection information */
@@ -987,9 +988,21 @@ static int comparePieceByIndex(void const* va, void const* vb)
     return 0;
 }
 
+static int comparePieceBySequence(void const* va, void const* vb)
+{
+    struct weighted_piece const* a = va;
+    struct weighted_piece const* b = vb;
+    tr_torrent const* tor = weightTorrent;
+    int pa = tor->info.pieces[a->index].priority;
+    int pb = tor->info.pieces[b->index].priority;
+
+    if (pa != pb) return (pa < pb) ? 1 : -1;
+    return (a->index < b->index) ? -1 : (a->index > b->index) ? 1 : 0;
+}
+
 static void pieceListSort(tr_swarm* s, enum piece_sort_state state)
 {
-    TR_ASSERT(state == PIECES_SORTED_BY_INDEX || state == PIECES_SORTED_BY_WEIGHT);
+    TR_ASSERT(state == PIECES_SORTED_BY_INDEX || state == PIECES_SORTED_BY_WEIGHT || state == PIECES_SORTED_BY_SEQUENCE);
 
     if ((s->pieceCount > 0) && (s->pieces != NULL))
     {
@@ -997,6 +1010,11 @@ static void pieceListSort(tr_swarm* s, enum piece_sort_state state)
         {
             setComparePieceByWeightTorrent(s);
             qsort(s->pieces, s->pieceCount, sizeof(struct weighted_piece), comparePieceByWeight);
+        }
+        else if (state == PIECES_SORTED_BY_SEQUENCE)
+        {
+            setComparePieceByWeightTorrent(s);
+            qsort(s->pieces, s->pieceCount, sizeof(struct weighted_piece), comparePieceBySequence);
         }
         else
         {
@@ -1020,7 +1038,7 @@ static void pieceListSort(tr_swarm* s, enum piece_sort_state state)
 
 static void assertWeightedPiecesAreSorted(Torrent* t)
 {
-    if (t->endgame == 0)
+    if (t->endgame == 0 && !t->tor->isSequential)
     {
         setComparePieceByWeightTorrent(t);
 
@@ -1142,7 +1160,14 @@ static void pieceListRebuild(tr_swarm* s)
         s->pieces = pieces;
         s->pieceCount = pieceCount;
 
-        pieceListSort(s, PIECES_SORTED_BY_WEIGHT);
+        if (s->tor->isSequential)
+        {
+            pieceListSort (s, PIECES_SORTED_BY_SEQUENCE);
+        }
+        else
+        {
+            pieceListSort(s, PIECES_SORTED_BY_WEIGHT);
+        }
 
         /* cleanup */
         tr_free(pool);
@@ -1173,7 +1198,7 @@ static void pieceListResortPiece(tr_swarm* s, struct weighted_piece* p)
     int pos;
     bool isSorted = true;
 
-    if (p == NULL)
+    if ((p == NULL) || (s->tor->isSequential))
     {
         return;
     }
@@ -1356,7 +1381,8 @@ void tr_peerMgrGetNextRequests(tr_torrent* tor, tr_peer* peer, int numwant, tr_b
 
     if (s->pieceSortState != PIECES_SORTED_BY_WEIGHT)
     {
-        pieceListSort(s, PIECES_SORTED_BY_WEIGHT);
+        pieceListSort(s, s->tor->isSequential ? PIECES_SORTED_BY_SEQUENCE
+            : PIECES_SORTED_BY_WEIGHT);
     }
 
     assertReplicationCountIsExact(s);
@@ -1459,7 +1485,7 @@ void tr_peerMgrGetNextRequests(tr_torrent* tor, tr_peer* peer, int numwant, tr_b
     /* In most cases we've just changed the weights of a small number of pieces.
      * So rather than qsort()ing the entire array, it's faster to apply an
      * adaptive insertion sort algorithm. */
-    if (got > 0)
+    if (got > 0 && !tor->isSequential)
     {
         /* not enough requests || last piece modified */
         if (checkedPieceCount == s->pieceCount)

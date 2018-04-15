@@ -857,6 +857,8 @@ void tr_ctorFree(tr_ctor* ctor);
            when the torrent is added. (Default: False) */
 void tr_ctorSetDeleteSource(tr_ctor* ctor, bool doDelete);
 
+void  tr_ctorSetSequentialDownload (tr_ctor * ctor, bool sequential);
+
 /** @brief Set the constructor's metainfo from a magnet link */
 int tr_ctorSetMetainfoFromMagnetLink(tr_ctor* ctor, char const* magnet);
 

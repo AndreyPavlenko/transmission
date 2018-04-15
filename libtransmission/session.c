@@ -429,6 +429,7 @@ void tr_sessionGetSettings(tr_session* s, tr_variant* d)
     tr_variantDictAddBool(d, TR_KEY_idle_seeding_limit_enabled, tr_sessionIsIdleLimited(s));
     tr_variantDictAddStr(d, TR_KEY_incomplete_dir, tr_sessionGetIncompleteDir(s));
     tr_variantDictAddBool(d, TR_KEY_incomplete_dir_enabled, tr_sessionIsIncompleteDirEnabled(s));
+    tr_variantDictAddBool (d, TR_KEY_sequentialDownload, s->isSequentialDownload);
     tr_variantDictAddInt(d, TR_KEY_message_level, tr_logGetLevel());
     tr_variantDictAddInt(d, TR_KEY_peer_limit_global, s->peerLimit);
     tr_variantDictAddInt(d, TR_KEY_peer_limit_per_torrent, s->peerLimitPerTorrent);
@@ -910,6 +911,11 @@ static void sessionSetImpl(void* vdata)
     if (tr_variantDictFindInt(settings, TR_KEY_peer_id_ttl_hours, &i))
     {
         session->peer_id_ttl_hours = i;
+    }
+
+    if (tr_variantDictFindBool (settings, TR_KEY_sequentialDownload, &boolVal))
+    {
+        session->isSequentialDownload = boolVal;
     }
 
     /* torrent queues */

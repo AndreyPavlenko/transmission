@@ -259,6 +259,7 @@ struct tr_torrent
     bool finishedSeedingByIdle;
 
     tr_ptrArray labels;
+    bool isSequential;
 };
 
 static inline tr_torrent* tr_torrentNext(tr_session* session, tr_torrent* current)

@@ -35,10 +35,12 @@ struct tr_ctor
     tr_session const* session;
     bool saveInOurTorrentsDir;
     bool doDelete;
+    bool sequentialDownload;
 
     tr_priority_t bandwidthPriority;
     bool isSet_metainfo;
     bool isSet_delete;
+    bool isSet_sequentialDownload;
     tr_variant metainfo;
     char* sourceFile;
 
@@ -288,6 +290,24 @@ bool tr_ctorGetDeleteSource(tr_ctor const* ctor, bool* setme)
     {
         *setme = ctor->doDelete;
     }
+
+    return ret;
+}
+
+void  tr_ctorSetSequentialDownload (tr_ctor * ctor, bool sequential)
+{
+    ctor->sequentialDownload = sequential;
+    ctor->isSet_sequentialDownload = true;
+}
+
+bool tr_ctorGetSequentialDownload (const tr_ctor * ctor, bool * setme)
+{
+    bool ret = true;
+
+    if (!ctor->isSet_sequentialDownload)
+        ret = false;
+    else if (setme)
+        *setme = ctor->sequentialDownload;
 
     return ret;
 }

@@ -113,6 +113,7 @@ struct tr_session
     bool isRatioLimited;
     bool isIdleLimited;
     bool isIncompleteDirEnabled;
+    bool isSequentialDownload;
     bool pauseAddedTorrent;
     bool deleteSourceTorrent;
     bool scrapePausedTorrents;
