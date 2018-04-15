@@ -265,7 +265,7 @@ static char const* getHomeDir(void)
 
             home = win32_get_known_folder(&FOLDERID_Profile);
 
-#else
+#elif !defined(__ANDROID__)
 
             struct passwd pwent;
             struct passwd* pw = NULL;
