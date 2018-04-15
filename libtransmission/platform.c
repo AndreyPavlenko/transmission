@@ -653,7 +653,8 @@ char* tr_getSessionIdDir(void)
 {
 #ifndef _WIN32
 
-    return tr_strdup("/tmp");
+    char* tmp = getenv("TMP");
+    return tr_strdup((tmp == NULL) ? "/tmp" : tmp);
 
 #else
 
