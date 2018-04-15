@@ -64,6 +64,7 @@ set(PROJECT_FILES
   tr-udp.c
   tr-utp.c
   upnp.c
+  locale-backport.c
   utils.c
   variant-benc.c
   variant.c
