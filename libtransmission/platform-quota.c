@@ -103,6 +103,10 @@ static char const* getdev(char const* path)
     fclose(fp);
     return mnt.mnt_special;
 
+#elif defined(__ANDROID__) && (__ANDROID_API__ < 21)
+
+    return NULL;
+
 #else
 
     struct mntent const* mnt;
@@ -178,6 +182,10 @@ static char const* getfstype(char const* device)
 
     fclose(fp);
     return mnt.mnt_fstype;
+
+#elif defined(__ANDROID__) && (__ANDROID_API__ < 21)
+
+    return NULL;
 
 #else
 
