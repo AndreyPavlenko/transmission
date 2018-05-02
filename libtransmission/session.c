@@ -1870,6 +1870,28 @@ bool tr_sessionGetPaused(tr_session const* session)
     return session->pauseAddedTorrent;
 }
 
+void tr_sessionSuspend(tr_session* session, bool suspend)
+{
+    tr_sessionSetPaused(session, suspend);
+
+    for (tr_torrent* it = session->torrentList; it != NULL; it = it->next)
+    {
+        if (suspend)
+        {
+            if (it->isRunning)
+            {
+                it->isSuspended = true;
+                tr_torrentStop(it);
+            }
+        }
+        else if (it->isSuspended)
+        {
+            tr_torrentStart(it);
+            it->isSuspended = false;
+        }
+    }
+}
+
 void tr_sessionSetDeleteSource(tr_session* session, bool deleteSource)
 {
     TR_ASSERT(tr_isSession(session));

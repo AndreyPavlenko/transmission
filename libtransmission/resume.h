@@ -41,7 +41,8 @@ enum
     TR_FR_FILENAMES = (1 << 20),
     TR_FR_NAME = (1 << 21),
     TR_FR_LABELS = (1 << 22),
-    TR_FR_SEQUENTIAL = (1 << 23)
+    TR_FR_SEQUENTIAL = (1 << 23),
+    TR_FR_SUSPEND = (1 << 24)
 };
 
 /**

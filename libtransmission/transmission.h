@@ -595,6 +595,9 @@ uint16_t tr_sessionGetPeerLimitPerTorrent(tr_session const*);
 void tr_sessionSetPaused(tr_session*, bool isPaused);
 bool tr_sessionGetPaused(tr_session const*);
 
+/** @brief Set the tr_sessionSetPaused() and pause all torrents */
+void tr_sessionSuspend(tr_session*, bool suspend);
+
 void tr_sessionSetDeleteSource(tr_session*, bool deleteSource);
 bool tr_sessionGetDeleteSource(tr_session const*);
 

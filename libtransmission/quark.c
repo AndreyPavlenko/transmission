@@ -357,6 +357,7 @@ static struct tr_key_struct const my_static[] =
     Q("startDate"),
     Q("status"),
     Q("statusbar-stats"),
+    Q("suspended"),
     Q("tag"),
     Q("tier"),
     Q("time-checked"),

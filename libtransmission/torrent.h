@@ -260,6 +260,7 @@ struct tr_torrent
 
     tr_ptrArray labels;
     bool isSequential;
+    bool isSuspended;
 };
 
 static inline tr_torrent* tr_torrentNext(tr_session* session, tr_torrent* current)

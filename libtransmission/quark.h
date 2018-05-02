@@ -356,6 +356,7 @@ enum
     TR_KEY_startDate,
     TR_KEY_status,
     TR_KEY_statusbar_stats,
+    TR_KEY_suspended,
     TR_KEY_tag,
     TR_KEY_tier,
     TR_KEY_time_checked,
