@@ -407,6 +407,13 @@ bool tr_sys_path_rename(char const* src_path, char const* dst_path, tr_error** e
 
     bool ret = rename(src_path, dst_path) != -1;
 
+#ifdef __ANDROID__
+    if (!ret && (ret = tr_android_path_rename(src_path, dst_path)))
+    {
+        errno = 0;
+    }
+#endif
+
     if (!ret)
     {
         set_system_error(error, errno);
@@ -420,6 +427,13 @@ bool tr_sys_path_remove(char const* path, tr_error** error)
     TR_ASSERT(path != NULL);
 
     bool ret = remove(path) != -1;
+
+#ifdef __ANDROID__
+    if (!ret && (access(path, F_OK) == 0) && (ret = tr_android_path_remove(path)))
+    {
+        errno = 0;
+    }
+#endif
 
     if (!ret)
     {
@@ -460,6 +474,9 @@ tr_sys_file_t tr_sys_file_get_std(tr_std_sys_file_t std_file, tr_error** error)
     return ret;
 }
 
+// Set this to true if at least one file opened by tr_android_file_open()
+static volatile bool call_android_file_close = false;
+
 tr_sys_file_t tr_sys_file_open(char const* path, int flags, int permissions, tr_error** error)
 {
     TR_ASSERT(path != NULL);
@@ -491,6 +508,14 @@ tr_sys_file_t tr_sys_file_open(char const* path, int flags, int permissions, tr_
 
     ret = open(path, native_flags, permissions);
 
+#ifdef __ANDROID__
+    if ((ret == TR_BAD_SYS_FILE) && ((ret = tr_android_file_open(path, flags)) != TR_BAD_SYS_FILE))
+    {
+        errno = 0;
+        call_android_file_close = true;
+    }
+#endif
+
     if (ret != TR_BAD_SYS_FILE)
     {
         if ((flags & TR_SYS_FILE_SEQUENTIAL) != 0)
@@ -512,6 +537,14 @@ tr_sys_file_t tr_sys_file_open_temp(char* path_template, tr_error** error)
 
     tr_sys_file_t ret = mkstemp(path_template);
 
+#ifdef __ANDROID__
+    if ((ret == TR_BAD_SYS_FILE) && ((ret = tr_android_file_open_temp(path_template)) != TR_BAD_SYS_FILE))
+    {
+        errno = 0;
+        call_android_file_close = true;
+    }
+#endif
+
     if (ret == TR_BAD_SYS_FILE)
     {
         set_system_error(error, errno);
@@ -525,6 +558,10 @@ tr_sys_file_t tr_sys_file_open_temp(char* path_template, tr_error** error)
 bool tr_sys_file_close(tr_sys_file_t handle, tr_error** error)
 {
     TR_ASSERT(handle != TR_BAD_SYS_FILE);
+
+#ifdef __ANDROID__
+    if (call_android_file_close && tr_android_file_close(handle)) return true;
+#endif
 
     bool ret = close(handle) != -1;
 
@@ -1128,6 +1165,15 @@ bool tr_sys_dir_create(char const* path, int flags, int permissions, tr_error** 
             errno = EEXIST;
         }
     }
+
+#ifdef __ANDROID__
+    if (!ret && tr_android_dir_create(path))
+    {
+        tr_error_clear(&my_error);
+        errno = 0;
+        ret = true;
+    }
+#endif
 
     if (!ret)
     {

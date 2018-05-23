@@ -252,6 +252,11 @@ char* tr_sys_path_dirname(char const* path, struct tr_error** error);
  */
 bool tr_sys_path_rename(char const* src_path, char const* dst_path, struct tr_error** error);
 
+#ifdef __ANDROID__
+// Rename file or directory using the Android Storage Access Framework
+bool tr_android_path_rename(char const* src_path, char const* dst_path);
+#endif
+
 /**
  * @brief Portability wrapper for `remove()`.
  *
@@ -264,6 +269,11 @@ bool tr_sys_path_rename(char const* src_path, char const* dst_path, struct tr_er
  *         files and directories).
  */
 bool tr_sys_path_remove(char const* path, struct tr_error** error);
+
+#ifdef __ANDROID__
+// Remove file or directory using the Android Storage Access Framework
+bool tr_android_path_remove(char const* path);
+#endif
 
 /**
  * @brief Transform path separators to native ones, in-place.
@@ -304,6 +314,11 @@ tr_sys_file_t tr_sys_file_get_std(tr_std_sys_file_t std_file, struct tr_error** 
  */
 tr_sys_file_t tr_sys_file_open(char const* path, int flags, int permissions, struct tr_error** error);
 
+#ifdef __ANDROID__
+// Open file using the Android Storage Access Framework
+tr_sys_file_t tr_android_file_open(char const* path, int flags);
+#endif
+
 /**
  * @brief Portability wrapper for `mkstemp()`.
  *
@@ -320,6 +335,11 @@ tr_sys_file_t tr_sys_file_open(char const* path, int flags, int permissions, str
  */
 tr_sys_file_t tr_sys_file_open_temp(char* path_template, struct tr_error** error);
 
+#ifdef __ANDROID__
+// Close the file opened by the Android Storage Access Framework
+tr_sys_file_t tr_android_file_open_temp(char* path_template);
+#endif
+
 /**
  * @brief Portability wrapper for `close()`.
  *
@@ -330,6 +350,11 @@ tr_sys_file_t tr_sys_file_open_temp(char* path_template, struct tr_error** error
  * @return `True` on success, `false` otherwise (with `error` set accordingly).
  */
 bool tr_sys_file_close(tr_sys_file_t handle, struct tr_error** error);
+
+#ifdef __ANDROID__
+// Close the file opened by the Android Storage Access Framework
+bool tr_android_file_close(tr_sys_file_t handle);
+#endif
 
 /**
  * @brief Portability wrapper for `fstat()`.
@@ -606,6 +631,11 @@ char* tr_sys_dir_get_current(struct tr_error** error);
  * @return `True` on success, `false` otherwise (with `error` set accordingly).
  */
 bool tr_sys_dir_create(char const* path, int flags, int permissions, struct tr_error** error);
+
+#ifdef __ANDROID__
+// Create directory using the Android Storage Access Framework
+bool tr_android_dir_create(char const* path);
+#endif
 
 /**
  * @brief Portability wrapper for `mkdtemp()`.
