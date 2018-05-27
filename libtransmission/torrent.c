@@ -3097,10 +3097,14 @@ static void deleteLocalData(tr_torrent* tor, tr_fileFunc func)
         /* if we found the file, move it */
         if (filename != NULL)
         {
-            char* target = tr_buildPath(tmpdir, tor->info.files[f].name, NULL);
-            tr_moveFile(filename, target, NULL);
-            tr_ptrArrayAppend(&files, target);
-            tr_free(filename);
+#ifdef __ANDROID__
+          tr_sys_path_remove(filename, NULL);
+#else
+          char* target = tr_buildPath(tmpdir, tor->info.files[f].name, NULL);
+          tr_moveFile(filename, target, NULL);
+          tr_ptrArrayAppend(&files, target);
+#endif
+          tr_free(filename);
         }
     }
 
