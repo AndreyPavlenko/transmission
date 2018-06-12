@@ -312,6 +312,87 @@ uint8_t* tr_loadFile(char const* path, size_t* size, tr_error** error)
         return NULL;
     }
 
+    if (info.size == 0) // Sometimes stat returns 0 for non-empty files
+    {
+        FILE* f = fdopen(fd, "rb");
+
+        if (f == NULL)
+        {
+            goto fread_err;
+        }
+
+        size_t read_len = 0;
+        size_t buf_len = 8192;
+        buf = tr_malloc(buf_len);
+
+        for (size_t i = 0;;)
+        {
+            i = fread(buf + read_len, sizeof(char), buf_len - read_len, f);
+
+            if (i <= 0)
+            {
+                if (feof(f))
+                {
+                    fclose(f);
+                    break;
+                } else
+                {
+                    fclose(f);
+                    goto fread_err;
+                }
+            }
+
+            if ((read_len += i) == buf_len)
+            {
+                if ((SIZE_MAX - buf_len) <= buf_len)
+                {
+                    tr_logAddError(err_fmt, path, "File too large: %s", path);
+                    fclose(f);
+                    goto fread_err;
+                }
+
+                buf_len += buf_len;
+                void* new_buf = tr_realloc(buf, buf_len);
+
+                if (new_buf == NULL)
+                {
+                    tr_logAddError(err_fmt, path, "Out of memory");
+                    fclose(f);
+                    goto fread_err;
+                }
+
+                buf = new_buf;
+            }
+        }
+
+        fclose(f);
+        tr_sys_file_close(fd, NULL);
+
+        if (read_len == buf_len)
+        {
+            void* new_buf = tr_realloc(buf, buf_len + 1);
+
+            if (new_buf == NULL)
+            {
+                tr_logAddError(err_fmt, path, "Out of memory");
+                goto fread_err;
+            }
+
+            buf = new_buf;
+        }
+
+        buf[read_len + 1] = '\0';
+        *size = read_len;
+        return buf;
+
+        fread_err: {
+            tr_logAddError(err_fmt, path, my_error->message);
+            tr_sys_file_close(fd, NULL);
+            tr_error_propagate(error, &my_error);
+            return NULL;
+        }
+    }
+
     buf = tr_malloc(info.size + 1);
 
     if (!tr_sys_file_read(fd, buf, info.size, NULL, &my_error))
