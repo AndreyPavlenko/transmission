@@ -14,7 +14,9 @@
 #include <event2/bufferevent.h>
 
 #include <stdint.h>
+#ifdef WITH_UTP
 #include <libutp/utp.h>
+#endif
 
 #include "transmission.h"
 #include "session.h"
@@ -24,7 +26,11 @@
 #include "peer-common.h" /* MAX_BLOCK_SIZE */
 #include "peer-io.h"
 #include "tr-assert.h"
+
+#ifdef WITH_UTP
 #include "tr-utp.h"
+#endif
+
 #include "trevent.h" /* tr_runInEventThread() */
 #include "utils.h"
 
@@ -737,10 +743,12 @@ tr_peerIo* tr_peerIoNewOutgoing(tr_session* session, tr_bandwidth* parent, tr_ad
 
     struct tr_peer_socket socket = TR_PEER_SOCKET_INIT;
 
+#ifdef WITH_UTP
     if (utp)
     {
         socket = tr_netOpenPeerUTPSocket(session, addr, port, isSeed);
     }
+#endif
 
     if (socket.type == TR_PEER_SOCKET_TYPE_NONE)
     {
@@ -1307,6 +1315,7 @@ static int tr_peerIoTryRead(tr_peerIo* io, size_t howmuch)
     {
         switch (io->socket.type)
         {
+#ifdef WITH_UTP
         case TR_PEER_SOCKET_TYPE_UTP:
             /* UTP_RBDrained notifies libutp that your read buffer is emtpy.
              * It opens up the congestion window by sending an ACK (soonish)
@@ -1317,6 +1326,7 @@ static int tr_peerIoTryRead(tr_peerIo* io, size_t howmuch)
             }
 
             break;
+#endif
 
         case TR_PEER_SOCKET_TYPE_TCP:
             {
@@ -1375,10 +1385,12 @@ static int tr_peerIoTryWrite(tr_peerIo* io, size_t howmuch)
     {
         switch (io->socket.type)
         {
+#ifdef WITH_UTP
         case TR_PEER_SOCKET_TYPE_UTP:
             UTP_Write(io->socket.handle.utp, howmuch);
             n = old_len - evbuffer_get_length(io->outbuf);
             break;
+#endif
 
         case TR_PEER_SOCKET_TYPE_TCP:
             {

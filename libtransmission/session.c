@@ -22,7 +22,9 @@
 #include <event2/event.h>
 
 #include <stdint.h>
+#ifdef WITH_UTP
 #include <libutp/utp.h>
+#endif
 
 // #define TR_SHOW_DEPRECATED
 #include "transmission.h"
@@ -51,7 +53,11 @@
 #include "tr-assert.h"
 #include "tr-dht.h" /* tr_dhtUpkeep() */
 #include "tr-udp.h"
+
+#ifdef WITH_UTP
 #include "tr-utp.h"
+#endif
+
 #include "tr-lpd.h"
 #include "trevent.h"
 #include "utils.h"
@@ -1982,7 +1988,10 @@ static void sessionCloseImplStart(tr_session* session)
         tr_lpdUninit(session);
     }
 
+#ifdef WITH_UTP
     tr_utpClose(session);
+#endif
+    
     tr_dhtUninit(session);
 
     event_free(session->saveTimer);

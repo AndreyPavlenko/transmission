@@ -33,7 +33,9 @@ THE SOFTWARE.
 #include <event2/event.h>
 
 #include <stdint.h>
+#ifdef WITH_UTP
 #include <libutp/utp.h>
+#endif
 
 #include "transmission.h"
 #include "log.h"
@@ -41,7 +43,11 @@ THE SOFTWARE.
 #include "session.h"
 #include "tr-assert.h"
 #include "tr-dht.h"
+
+#ifdef WITH_UTP
 #include "tr-utp.h"
+#endif
+
 #include "tr-udp.h"
 
 /* Since we use a single UDP socket in order to implement multiple
@@ -281,6 +287,7 @@ static void event_callback(evutil_socket_t s, short type, void* sv)
                 tr_logAddNamedDbg("UDP", "Couldn't parse UDP tracker packet.");
             }
         }
+#ifdef WITH_UTP
         else
         {
             if (tr_sessionIsUTPEnabled(ss))
@@ -293,6 +300,7 @@ static void event_callback(evutil_socket_t s, short type, void* sv)
                 }
             }
         }
+#endif
     }
 }
 

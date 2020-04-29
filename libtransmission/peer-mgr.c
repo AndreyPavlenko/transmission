@@ -14,7 +14,9 @@
 #include <event2/event.h>
 
 #include <stdint.h>
+#ifdef WITH_UTP
 #include <libutp/utp.h>
+#endif
 
 #include "transmission.h"
 #include "announcer.h"
@@ -35,7 +37,11 @@
 #include "stats.h" /* tr_statsAddUploaded, tr_statsAddDownloaded */
 #include "torrent.h"
 #include "tr-assert.h"
+
+#ifdef WITH_UTP
 #include "tr-utp.h"
+#endif
+
 #include "utils.h"
 #include "webseed.h"
 

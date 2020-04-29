@@ -35,7 +35,9 @@
 #include <event2/util.h>
 
 #include <stdint.h>
+#ifdef WITH_UTP
 #include <libutp/utp.h>
+#endif
 
 #include "transmission.h"
 #include "fdlimit.h" /* tr_fdSocketClose() */
@@ -45,7 +47,11 @@
 #include "session.h" /* tr_sessionGetPublicAddress() */
 #include "tr-assert.h"
 #include "tr-macros.h"
+
+#ifdef WITH_UTP
 #include "tr-utp.h" /* tr_utpSendTo() */
+#endif
+
 #include "utils.h" /* tr_time(), tr_logAddDebug() */
 
 #ifndef IN_MULTICAST
@@ -366,6 +372,7 @@ struct tr_peer_socket tr_netOpenPeerSocket(tr_session* session, tr_address const
     return ret;
 }
 
+#ifdef WITH_UTP
 struct tr_peer_socket tr_netOpenPeerUTPSocket(tr_session* session, tr_address const* addr, tr_port port, bool clientIsSeed)
 {
     TR_UNUSED(clientIsSeed);
@@ -386,6 +393,7 @@ struct tr_peer_socket tr_netOpenPeerUTPSocket(tr_session* session, tr_address co
 
     return ret;
 }
+#endif
 
 static tr_socket_t tr_netBindTCPImpl(tr_address const* addr, tr_port port, bool suppressMsgs, int* errOut)
 {
