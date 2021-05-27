@@ -647,7 +647,7 @@ foreach(P cli daemon gtk mac qt utils web)
     endif()
 endforeach()
 
-if(ENABLE_DAEMON OR ENABLE_GTK OR ENABLE_QT)
+if(ENABLE_DAEMON OR ENABLE_GTK OR ENABLE_QT OR ENABLE_WEB)
     tr_install_web(${CMAKE_INSTALL_DATAROOTDIR}/${TR_NAME})
 endif()
 
